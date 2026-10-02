@@ -1,4 +1,4 @@
-# Window Open - Climate Off: Scene Version
+# Window Open → Climate Off (Scene Restore)
 
 This fork adds a blueprint that creates and restores its own temporary scene. No text helper, boolean helper, or manually created scene is required.
 

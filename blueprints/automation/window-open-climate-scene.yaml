@@ -5,7 +5,7 @@
 # Scene variant, 2026-10-02. No manually created helpers or scenes required.
 
 blueprint:
-  name: "Window Open - Climate Off (Automatic Scene, No Helpers)"
+  name: "Window Open → Climate Off (Scene Restore)"
   description: >-
     Saves a temporary scene before turning an active climate device off after
     the window has stayed open for the selected time. Restores that scene after

@@ -7,7 +7,7 @@ need to create a text helper, boolean helper, or scene yourself.
 
 1. Open **Settings > Automations & scenes > Blueprints > Import blueprint**.
 2. Paste this GitHub URL, preview, and import it:
-   https://github.com/Teeseeone/home-assistant/blob/main/blueprints/automation/window-open-climate-scene.yaml
+   https://github.com/Teeseeone/window-climate-scene-blueprint/blob/main/blueprints/automation/window-open-climate-scene.yaml
    Select **Window Open - Climate Off (Automatic Scene, No Helpers)** and choose
    **Create automation**.
 3. Select your window sensor and climate device. Set the open and closed delays

@@ -27,7 +27,7 @@ blueprint:
     Adapted from blaugrau90's selectable restore-mode blueprint, based on the
     original concept by SmartLiving.Rocks.
   domain: automation
-  source_url: https://github.com/Teeseeone/home-assistant/blob/main/blueprints/automation/window-open-climate-scene.yaml
+  source_url: https://github.com/Teeseeone/window-climate-scene-blueprint/blob/main/blueprints/automation/window-open-climate-scene.yaml
   homeassistant:
     min_version: "2024.10.0"
   input:

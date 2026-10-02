@@ -1,3 +1,26 @@
+# Window Open - Climate Off: Scene Version
+
+This fork adds a blueprint that creates and restores its own temporary scene. No text helper, boolean helper, or manually created scene is required.
+
+- Separate open and closed delays: **0-60 seconds**.
+- Each delay has a **slider and editable numeric field**, with 1-second steps and a 4-second default.
+- Restore only the HVAC mode, or all supported climate settings.
+- An already-off heater stays off; reopening retains the original snapshot.
+
+## Import through Home Assistant
+
+Open **Settings > Automations & scenes > Blueprints > Import blueprint** and paste this [blueprint URL](https://github.com/Teeseeone/home-assistant/blob/main/blueprints/automation/window-open-climate-scene.yaml). Preview and import it, then create an automation and select your window sensor and heater. All settings are adjusted through the blueprint form. No YAML editing is needed.
+
+[Detailed setup and behavior](blueprints/automation/INSTALL.md)
+
+**Scene lifetime:** Home Assistant removes temporary scenes on restart or scene reload. If the scene is lost while paused, this blueprint leaves the heater off rather than guessing its previous settings.
+
+Local YAML, template, and 17 behavior simulations passed. Live Home Assistant and heater testing remains pending.
+
+Adapted from blaugrau90's selectable restore-mode blueprint, based on the original concept by SmartLiving.Rocks. Original blueprints are retained below.
+
+---
+
 # Home Assistant
 
 Personal collection of Home Assistant blueprints, automations, and integrations.

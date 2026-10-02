@@ -1,0 +1,222 @@
+# Scene-based adaptation of blaugrau90's selectable restore-mode blueprint.
+# Upstream: https://github.com/blaugrau90/home-assistant/blob/main/blueprints/automation/window-open-climate-restore-mode.yaml
+# Original concept: SmartLiving.Rocks
+# https://community.home-assistant.io/t/window-open-climate-off/257293
+# Scene variant, 2026-10-02. No manually created helpers or scenes required.
+
+blueprint:
+  name: "Window Open - Climate Off (Automatic Scene, No Helpers)"
+  description: >-
+    Saves a temporary scene before turning an active climate device off after
+    the window has stayed open for the selected time. Restores that scene after
+    the window stays closed. No helper or scene setup is needed.
+
+    Choose mode-only restoration or a snapshot of all supported climate settings.
+    Each automation gets its own scene. Reopening cancels the close delay without
+    overwriting the original snapshot. A heater already off is left off.
+
+    Temporary scenes are lost after Home Assistant restarts or scenes are reloaded.
+    If the saved scene is missing, this blueprint leaves an off heater off rather
+    than guessing its previous mode. Automation reloads can resume a saved scene
+    while that scene still exists. Do not rename the automation during a pause.
+
+    If someone has already turned the heater back on before restoration, the saved
+    scene is discarded. An additional off command while it is already off cannot
+    be distinguished from the automation's off state.
+
+    Adapted from blaugrau90's selectable restore-mode blueprint, based on the
+    original concept by SmartLiving.Rocks.
+  domain: automation
+  source_url: https://github.com/Teeseeone/home-assistant/blob/main/blueprints/automation/window-open-climate-scene.yaml
+  homeassistant:
+    min_version: "2024.10.0"
+  input:
+    window_entity:
+      name: Window sensor
+      description: Select a window sensor, or an existing group that is on when any window is open.
+      selector:
+        entity:
+          filter:
+            - domain: binary_sensor
+    climate_target:
+      name: Climate device
+      selector:
+        entity:
+          filter:
+            - domain: climate
+    minimum_open_time:
+      name: Minimum open time
+      description: Adjust the slider or type 0-60 seconds. Zero pauses immediately.
+      default: 4
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 1
+          unit_of_measurement: s
+          mode: slider
+    minimum_close_time:
+      name: Minimum closed time
+      description: Adjust the slider or type 0-60 seconds. Zero restores immediately.
+      default: 4
+      selector:
+        number:
+          min: 0
+          max: 60
+          step: 1
+          unit_of_measurement: s
+          mode: slider
+    restore_mode:
+      name: Restore strategy
+      description: Auto requires the climate device to support the auto HVAC mode.
+      default: restore_previous
+      selector:
+        select:
+          options:
+            - label: Restore the saved scene
+              value: restore_previous
+            - label: Switch to auto instead
+              value: set_auto
+    snapshot_scope:
+      name: What to save in the scene
+      description: Mode only preserves any temperature changes made while the window is open.
+      default: mode_only
+      selector:
+        select:
+          options:
+            - label: HVAC mode only
+              value: mode_only
+            - label: All supported climate settings
+              value: full
+    open_action:
+      name: Additional action after pausing (optional)
+      description: Keep actions short; a window state change cancels the current run.
+      default: []
+      selector:
+        action: {}
+    close_action:
+      name: Additional action after restoring (optional)
+      default: []
+      selector:
+        action: {}
+
+# No climate-state trigger: our own off/restore actions must not restart this run.
+mode: restart
+max_exceeded: silent
+
+variables:
+  window_entity: !input window_entity
+  climate_entity: !input climate_target
+  restore_mode: !input restore_mode
+  snapshot_scope: !input snapshot_scope
+  scene_id: "{{ 'window_climate_' ~ this.entity_id.split('.', 1)[1] }}"
+  scene_entity: "{{ 'scene.' ~ scene_id }}"
+
+triggers:
+  # to: null matches state changes, including unavailable/unknown, but not attributes.
+  # Every window state change cancels a pending delay; availability recovery retries.
+  - trigger: state
+    entity_id: !input window_entity
+    to: null
+  - trigger: homeassistant
+    event: start
+  - trigger: event
+    event_type: automation_reloaded
+
+actions:
+  - choose:
+      - conditions:
+          - condition: state
+            entity_id: !input window_entity
+            state: "on"
+        sequence:
+          - delay:
+              seconds: !input minimum_open_time
+          - condition: state
+            entity_id: !input window_entity
+            state: "on"
+          - wait_template: >-
+              {{ states(climate_entity) in
+                 (state_attr(climate_entity, 'hvac_modes') or []) }}
+          - condition: template
+            value_template: >-
+              {{ 'off' in (state_attr(climate_entity, 'hvac_modes') or [])
+                 and (restore_mode != 'set_auto' or
+                      'auto' in (state_attr(climate_entity, 'hvac_modes') or [])) }}
+          - if:
+              # Newly created scene entities may have state unknown: test existence,
+              # not has_value(), which would incorrectly treat an unused scene as absent.
+              - condition: template
+                value_template: "{{ states[scene_entity] is none }}"
+            then:
+              - condition: template
+                value_template: "{{ not is_state(climate_entity, 'off') }}"
+              - choose:
+                  - conditions: "{{ snapshot_scope == 'full' }}"
+                    sequence:
+                      - action: scene.create
+                        data:
+                          scene_id: "{{ scene_id }}"
+                          snapshot_entities:
+                            - !input climate_target
+                default:
+                  - action: scene.create
+                    data:
+                      scene_id: "{{ scene_id }}"
+                      entities: "{{ {climate_entity: {'state': states(climate_entity)}} }}"
+          - condition: template
+            value_template: "{{ states[scene_entity] is not none }}"
+          - action: climate.set_hvac_mode
+            target:
+              entity_id: !input climate_target
+            data:
+              hvac_mode: "off"
+          - choose: []
+            default: !input open_action
+
+      - conditions:
+          - condition: state
+            entity_id: !input window_entity
+            state: "off"
+          - condition: template
+            value_template: "{{ states[scene_entity] is not none }}"
+        sequence:
+          - delay:
+              seconds: !input minimum_close_time
+          - condition: state
+            entity_id: !input window_entity
+            state: "off"
+          - wait_template: >-
+              {{ states(climate_entity) in
+                 (state_attr(climate_entity, 'hvac_modes') or []) }}
+          # A scene reload during the delay must not cause an invalid restore.
+          - condition: template
+            value_template: "{{ states[scene_entity] is not none }}"
+          - choose:
+              - conditions: "{{ is_state(climate_entity, 'off') }}"
+                sequence:
+                  - choose:
+                      - conditions: "{{ restore_mode == 'set_auto' }}"
+                        sequence:
+                          - condition: template
+                            value_template: >-
+                              {{ 'auto' in (state_attr(climate_entity, 'hvac_modes') or []) }}
+                          - action: climate.set_hvac_mode
+                            target:
+                              entity_id: !input climate_target
+                            data:
+                              hvac_mode: auto
+                    default:
+                      - action: scene.turn_on
+                        target:
+                          entity_id: "{{ scene_entity }}"
+                  - action: scene.delete
+                    data:
+                      entity_id: "{{ scene_entity }}"
+                  - choose: []
+                    default: !input close_action
+            default:
+              # The device is already active: retain its current settings.
+              - action: scene.delete
+                data:
+                  entity_id: "{{ scene_entity }}"

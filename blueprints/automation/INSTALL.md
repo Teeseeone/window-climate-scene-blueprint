@@ -1,4 +1,4 @@
-# Window Open - Climate Off (Automatic Scene, No Helpers)
+# Window Open → Climate Off (Scene Restore)
 
 This adaptation creates and deletes its own temporary scene. You do not
 need to create a text helper, boolean helper, or scene yourself.
@@ -8,7 +8,7 @@ need to create a text helper, boolean helper, or scene yourself.
 1. Open **Settings > Automations & scenes > Blueprints > Import blueprint**.
 2. Paste this GitHub URL, preview, and import it:
    https://github.com/Teeseeone/window-climate-scene-blueprint/blob/main/blueprints/automation/window-open-climate-scene.yaml
-   Select **Window Open - Climate Off (Automatic Scene, No Helpers)** and choose
+   Select **Window Open → Climate Off (Scene Restore)** and choose
    **Create automation**.
 3. Select your window sensor and climate device. Set the open and closed delays
    using each slider or its editable numeric field. Both range from 0 to 60 seconds

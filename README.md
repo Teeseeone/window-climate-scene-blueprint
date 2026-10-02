@@ -9,7 +9,7 @@ This fork adds a blueprint that creates and restores its own temporary scene. No
 
 ## Import through Home Assistant
 
-Open **Settings > Automations & scenes > Blueprints > Import blueprint** and paste this [blueprint URL](https://github.com/Teeseeone/home-assistant/blob/main/blueprints/automation/window-open-climate-scene.yaml). Preview and import it, then create an automation and select your window sensor and heater. All settings are adjusted through the blueprint form. No YAML editing is needed.
+Open **Settings > Automations & scenes > Blueprints > Import blueprint** and paste this [blueprint URL](https://github.com/Teeseeone/window-climate-scene-blueprint/blob/main/blueprints/automation/window-open-climate-scene.yaml). Preview and import it, then create an automation and select your window sensor and heater. All settings are adjusted through the blueprint form. No YAML editing is needed.
 
 [Detailed setup and behavior](blueprints/automation/INSTALL.md)
 
